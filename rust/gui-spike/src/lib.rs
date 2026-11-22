@@ -62,6 +62,7 @@ pub mod notifications;
 pub mod permissions;
 /// RW-40/M-10 & M-11: пины (`GET/PUT/DELETE /channels/{id}/pins`) и ветки канала.
 pub mod pins_threads;
+pub mod plugins_store;
 pub mod polls;
 /// RW-40/BE-P2-10: профиль пользователя (`GET /users/{id}/profile`) с типизированными
 /// ошибками, `Retry-After` и разбором ответа.

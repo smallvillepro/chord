@@ -7557,6 +7557,29 @@ function boot() {
     invoke: (cmd, args) => /** @type {Promise<any>} */ (invoke(cmd, args)),
   });
 
+  // Плагинный API: ES-модули нельзя патчить снаружи, поэтому отдаём живые узлы.
+  // window.__CHORD__ стабилен по форме; loader подключается отдельным модулем.
+  /** @type {any} */ (globalThis).__CHORD__ = {
+    invoke: (cmd, args) => invoke(cmd, args),
+    dispatch,
+    chat,
+    composer,
+    tree,
+    members,
+    rail,
+    voice,
+    settings,
+    notifications,
+    renderMessage,
+    get app() {
+      return app;
+    },
+    listen(event, handler) {
+      const tauri = /** @type {any} */ (window).__TAURI__;
+      return tauri?.event?.listen ? tauri.event.listen(event, handler) : Promise.resolve(() => {});
+    },
+  };
+
   return {
     giftModal,
     qrAuthModal,

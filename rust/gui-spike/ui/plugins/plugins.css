@@ -1,0 +1,120 @@
+/* Plugin loader surface: toasts and the plugin manager modal. */
+
+.plugin-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 72px;
+  z-index: 4000;
+  max-width: 360px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  color: var(--text-strong);
+  font: 500 var(--font-size-ui) / 1.35 var(--font-sans);
+  box-shadow: var(--shadow-elevation-high);
+  animation: plugin-toast-in 160ms ease-out;
+}
+
+.plugin-toast--error {
+  border-color: var(--danger-text);
+}
+
+@keyframes plugin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.plugin-manager-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 55%);
+}
+
+.plugin-manager-overlay .plugin-manager {
+  position: static;
+  transform: none;
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(70vh, 720px);
+  gap: var(--space-3);
+}
+
+.plugin-manager__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plugin-manager__path {
+  font: 400 var(--font-size-small) / 1.4 var(--font-mono);
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.plugin-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+  min-height: 0;
+}
+
+.plugin-card {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+}
+
+.plugin-card__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plugin-card__name {
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-strong);
+}
+
+.plugin-card__meta,
+.plugin-card__error {
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.plugin-card__error {
+  color: var(--danger-text);
+  white-space: pre-wrap;
+}
+
+.plugin-card__actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.plugin-empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-ui);
+}

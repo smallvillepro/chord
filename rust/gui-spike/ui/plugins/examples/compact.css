@@ -1,0 +1,21 @@
+/**
+ * Compact mode — плотный список сообщений.
+ *
+ * Demonstrates the CSS-only plugin path: a `.css` file dropped into
+ * `userplugins/` is injected as a `<style data-plugin>` and needs no JS.
+ * Toggle it in the plugin manager like any other plugin.
+ */
+
+/* Blank selectors are deliberate: the file is a stylesheet, not a module. */
+.channel-message {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.channel-message .avatar {
+  margin-top: 2px;
+}
+
+.channel-message[data-group="true"] .text {
+  margin-top: 0;
+}

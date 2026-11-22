@@ -58,6 +58,7 @@ pub mod invites_plugin;
 pub mod media_plugin;
 pub mod net_plugin;
 pub mod notifications_plugin;
+pub mod plugins_plugin;
 pub mod search_plugin;
 pub mod settings_plugin;
 pub mod voice_plugin;
@@ -1416,6 +1417,47 @@ async fn settings_save(settings: UiSettings) -> Result<(), SettingsError> {
     settings_plugin::settings_save(settings).await
 }
 
+/// Absolute plugin directory, created on demand.
+#[tauri::command]
+async fn plugins_dir() -> Result<String, chord_client::plugins_store::PluginError> {
+    plugins_plugin::plugins_dir().await
+}
+
+/// Opens the plugin directory in the platform file manager.
+#[tauri::command]
+async fn plugins_open_dir() -> Result<String, chord_client::plugins_store::PluginError> {
+    plugins_plugin::plugins_open_dir().await
+}
+
+/// Plugin files currently in the directory.
+#[tauri::command]
+async fn plugins_list(
+) -> Result<Vec<chord_client::plugins_store::PluginEntry>, chord_client::plugins_store::PluginError>
+{
+    plugins_plugin::plugins_list().await
+}
+
+/// Source of one plugin file.
+#[tauri::command]
+async fn plugins_read(file: String) -> Result<String, chord_client::plugins_store::PluginError> {
+    plugins_plugin::plugins_read(file).await
+}
+
+/// Persisted enabled flags and per-plugin settings.
+#[tauri::command]
+async fn plugins_state_load(
+) -> Result<chord_client::plugins_store::PluginState, chord_client::plugins_store::PluginError> {
+    plugins_plugin::plugins_state_load().await
+}
+
+/// Atomic write of the plugin state file.
+#[tauri::command]
+async fn plugins_state_save(
+    state: chord_client::plugins_store::PluginState,
+) -> Result<(), chord_client::plugins_store::PluginError> {
+    plugins_plugin::plugins_state_save(state).await
+}
+
 /// Unified BFF domain action router (`bff_domains_router`).
 /// Validates action and resolves HTTP method, route, and body for client execution.
 #[tauri::command]
@@ -1979,6 +2021,7 @@ fn main() {
         .plugin(notifications_plugin::init())
         .plugin(search_plugin::init())
         .plugin(settings_plugin::init())
+        .plugin(plugins_plugin::init())
         .plugin(voice_plugin::init())
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
@@ -2099,6 +2142,12 @@ fn main() {
             net_disconnect,
             settings_load,
             settings_save,
+            plugins_dir,
+            plugins_open_dir,
+            plugins_list,
+            plugins_read,
+            plugins_state_load,
+            plugins_state_save,
             invoke_bff_domain,
             voice_connect,
             voice_disconnect,

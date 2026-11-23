@@ -24,6 +24,7 @@
   },
   "bundle": {
     "active": false,
-    "icon": []
+    "icon": [],
+    "resources": ["../../fixtures"]
   }
 }

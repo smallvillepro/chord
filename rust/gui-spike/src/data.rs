@@ -7522,8 +7522,8 @@ pub const MAX_INPUT_LEN: usize = 256;
 const ERROR_VALUE_PREVIEW: usize = 32;
 
 /// Каталог `fixtures/` в репозитории (на два уровня выше crate `rust/gui-spike`).
-/// Используется только как значение по умолчанию; рабочий путь задаёт `DL_FIXTURES`.
-fn default_fixtures_root() -> PathBuf {
+/// Используется как последний fallback для запуска из `cargo run`.
+fn repo_fixtures_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(Path::parent)
@@ -7531,12 +7531,35 @@ fn default_fixtures_root() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("fixtures"))
 }
 
+/// Каталог `fixtures/` рядом с исполняемым файлом.
+///
+/// Релизная сборка не должна зависеть от пути CI-машины, зашитого в
+/// `CARGO_MANIFEST_DIR`: на чужом ПК такого каталога нет, и `channels()`
+/// падает `NotFound` ещё до живой сессии. Установщик кладёт `fixtures/`
+/// рядом с exe, поэтому этот путь проверяется первым.
+fn packaged_fixtures_root() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    let dir = exe.parent()?;
+    let candidate = dir.join("fixtures");
+    candidate.is_dir().then_some(candidate)
+}
+
+/// Значение по умолчанию: упакованные фикстуры, иначе репозиторные.
+fn default_fixtures_root() -> PathBuf {
+    packaged_fixtures_root().unwrap_or_else(repo_fixtures_root)
+}
+
 /// Разрешает корень фикстур: явный аргумент (из `DL_FIXTURES`) важнее дефолта.
 /// Вынесено из [`fixtures_root`], чтобы проверять приоритет без мутации env.
 pub fn resolve_root(configured: Option<&str>) -> PathBuf {
+    resolve_root_from(configured, packaged_fixtures_root())
+}
+
+/// Чистая часть [`resolve_root`]: приоритет проверяется без файловой системы.
+fn resolve_root_from(configured: Option<&str>, packaged: Option<PathBuf>) -> PathBuf {
     match configured {
         Some(value) if !value.trim().is_empty() => PathBuf::from(value),
-        _ => default_fixtures_root(),
+        _ => packaged.unwrap_or_else(repo_fixtures_root),
     }
 }
 
@@ -13967,5 +13990,39 @@ mod dm_voice_stream_tests {
                 .as_deref()
                 .is_some_and(|s| s.contains("<b>") && s.contains("</b>"))
         );
+    }
+}
+
+#[cfg(test)]
+mod fixtures_root_tests {
+    use super::*;
+
+    #[test]
+    fn configured_path_wins_over_packaged() {
+        let root = resolve_root_from(
+            Some("D:/custom-fixtures"),
+            Some(PathBuf::from("C:/app/fixtures")),
+        );
+        assert_eq!(root, PathBuf::from("D:/custom-fixtures"));
+    }
+
+    #[test]
+    fn packaged_path_wins_over_repo() {
+        let packaged = PathBuf::from("C:/app/fixtures");
+        let root = resolve_root_from(None, Some(packaged.clone()));
+        assert_eq!(root, packaged);
+    }
+
+    #[test]
+    fn blank_configured_falls_back_to_packaged() {
+        let packaged = PathBuf::from("C:/app/fixtures");
+        let root = resolve_root_from(Some("   "), Some(packaged.clone()));
+        assert_eq!(root, packaged);
+    }
+
+    #[test]
+    fn repo_fallback_is_a_fixtures_directory() {
+        let root = resolve_root_from(None, None);
+        assert_eq!(root.file_name().and_then(|name| name.to_str()), Some("fixtures"));
     }
 }

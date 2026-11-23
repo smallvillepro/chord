@@ -26,4 +26,28 @@ describe('QA Contract — Feature: dispatch-model', () => {
     assert.equal(typeof mod, "object");
     assert.ok(mod !== null);
   });
+
+  it('4. MESSAGE_DELETE reaches the model instead of being skipped', async () => {
+    const { applyDispatch, createDispatchStore } = await import(
+      '../../rust/gui-spike/ui/features/dispatch-model.js'
+    );
+    const store = createDispatchStore();
+
+    const deleted = applyDispatch(store, {
+      kind: 'MESSAGE_DELETE',
+      data: { id: '1574456808469176493', channel_id: '1574456163964166260' },
+    });
+    assert.equal(deleted.changes.length, 1, 'delete must produce one change');
+    assert.equal(deleted.changes[0].type, 'message_delete');
+    assert.equal(deleted.changes[0].messageId, '1574456808469176493');
+    assert.equal(deleted.changes[0].channelId, '1574456163964166260');
+    assert.equal(deleted.counters.skipped, 0, 'delete must not be counted as skipped');
+
+    const bulk = applyDispatch(store, {
+      kind: 'MESSAGE_DELETE_BULK',
+      data: { ids: ['1', '2'], channel_id: '1574456163964166260' },
+    });
+    assert.equal(bulk.changes.length, 2, 'bulk delete must produce one change per id');
+    assert.equal(bulk.counters.skipped, 0);
+  });
 });

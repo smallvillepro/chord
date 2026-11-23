@@ -33,6 +33,8 @@ export const FORWARDED_KINDS = Object.freeze([
   "GUILD_MEMBER_LIST_UPDATE",
   "MESSAGE_ACK",
   "MESSAGE_CREATE",
+  "MESSAGE_DELETE",
+  "MESSAGE_DELETE_BULK",
   "MESSAGE_POLL_VOTE_ADD",
   "MESSAGE_REACTION_ADD",
   "MESSAGE_UPDATE",
@@ -1854,6 +1856,12 @@ export function applyDispatch(store, value, counters = emptyCounters()) {
       break;
     case "MESSAGE_CREATE":
       changes = projectMessageCreate(store, data, counters);
+      break;
+    case "MESSAGE_DELETE":
+      changes = projectMessageDelete(store, data, counters);
+      break;
+    case "MESSAGE_DELETE_BULK":
+      changes = projectMessageDeleteBulk(store, data, counters);
       break;
     case "MESSAGE_UPDATE":
       changes = projectMessageUpdate(store, data, counters);

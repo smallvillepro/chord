@@ -33,6 +33,8 @@ export const FORWARDED_KINDS = Object.freeze([
   "GUILD_MEMBER_LIST_UPDATE",
   "MESSAGE_ACK",
   "MESSAGE_CREATE",
+  "MESSAGE_DELETE",
+  "MESSAGE_DELETE_BULK",
   "MESSAGE_POLL_VOTE_ADD",
   "MESSAGE_REACTION_ADD",
   "MESSAGE_UPDATE",
@@ -1021,11 +1023,18 @@ export function projectReaction(store, kind, data, counters = emptyCounters()) {
     state.users.add(userId);
   } else {
     if (!state.users.has(userId)) {
-      // REMOVE без ADD — no-op, счётчик не уходит в минус.
-      counters.ignored += 1;
-      return [];
+      // История приходит мимо dispatch (messages_page), поэтому после рестарта
+      // users пуст, а счётчик живёт в anon. REMOVE всё равно означает, что
+      // реакция была: уменьшаем anon, иначе снятие «не срабатывает».
+      if (state.anon > 0) {
+        state.anon -= 1;
+      } else {
+        counters.ignored += 1;
+        return [];
+      }
+    } else {
+      state.users.delete(userId);
     }
-    state.users.delete(userId);
   }
   const count = state.users.size + state.anon;
   if (count <= 0) store.reactions.delete(key);
@@ -1113,6 +1122,22 @@ export function projectMessageCreate(store, data, counters = emptyCounters()) {
     attachments,
     embeds,
   };
+
+  // Реакции приходят внутри MESSAGE_CREATE (история, REST, READY). Без этого
+  // store пуст после рестарта: MESSAGE_REACTION_REMOVE от себя игнорируется как
+  // «REMOVE без ADD», а повторный ADD считает мою же реакцию второй.
+  for (const raw of asArray(data.reactions)) {
+    const record = asRecord(raw);
+    const emoji = emojiOf(record.emoji);
+    if (emoji === "") continue;
+    const total = Math.max(0, Math.trunc(Number(record.count) || 0));
+    const users = new Set();
+    if (asBool(record.me) && store.selfUserId !== "") users.add(store.selfUserId);
+    store.reactions.set(`${channelId}:${messageId}:${emoji}`, {
+      users,
+      anon: Math.max(0, total - users.size),
+    });
+  }
 
   let channelMessages = store.messages.get(channelId);
   if (!channelMessages) {
@@ -1854,6 +1879,12 @@ export function applyDispatch(store, value, counters = emptyCounters()) {
       break;
     case "MESSAGE_CREATE":
       changes = projectMessageCreate(store, data, counters);
+      break;
+    case "MESSAGE_DELETE":
+      changes = projectMessageDelete(store, data, counters);
+      break;
+    case "MESSAGE_DELETE_BULK":
+      changes = projectMessageDeleteBulk(store, data, counters);
       break;
     case "MESSAGE_UPDATE":
       changes = projectMessageUpdate(store, data, counters);

@@ -4785,7 +4785,12 @@ export function createChatScreen(options) {
     const currentCount = visible?.count ?? 0;
     const currentMe = visible?.me ?? false;
     const liveKey = `${key}:${emoji}`;
-    const previousLive = liveReactionCounts.get(liveKey) ?? 0;
+    // Первое событие после рестарта: live-карта пуста, но на экране уже стоит
+    // счётчик из истории. Берём его за базу, иначе REMOVE даёт 1-0+0=1,
+    // а повторный ADD — 1-0+1=2.
+    const previousLive = liveReactionCounts.has(liveKey)
+      ? /** @type {number} */ (liveReactionCounts.get(liveKey))
+      : currentCount;
     const liveCount = Math.max(0, Math.trunc(Number(change.count) || 0));
     if (liveCount === previousLive && !change.removed) return "applied";
     liveReactionCounts.set(liveKey, liveCount);

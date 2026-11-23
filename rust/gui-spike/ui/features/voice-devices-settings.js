@@ -1,4 +1,5 @@
 // @ts-check
+import { describeError } from "./errors.js";
 /**
  * V-07-UI-VOICE-DEVICES (RW-40): изолированный контроллер настроек «Голос и видео».
  *
@@ -518,7 +519,7 @@ export function createVoiceDevicesSettings(options) {
    * @returns {string}
    */
   function describeError(error) {
-    return error instanceof Error ? error.message : String(error);
+    return error instanceof Error ? error.message : describeError(error);
   }
 
   /**

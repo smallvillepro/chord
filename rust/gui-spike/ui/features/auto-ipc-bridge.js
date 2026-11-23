@@ -1,5 +1,6 @@
 // @ts-check
 import { signal } from "../state/signals.js";
+import { describeError } from "./errors.js";
 /**
  * Сгенерировано автоматически скриптом scripts/generate-ipc-bridges.mjs
  * Тонкий мост между Rust Tauri backend и JavaScript frontend.
@@ -1007,7 +1008,7 @@ export function createSignalCommand(cmd, initialValue, options = {}) {
       data.value = result;
       return result;
     } catch (err) {
-      const normalized = err instanceof Error ? err : new Error(String(err));
+      const normalized = err instanceof Error ? err : new Error(describeError(err));
       error.value = normalized;
       throw normalized;
     } finally {

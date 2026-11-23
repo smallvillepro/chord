@@ -1,4 +1,5 @@
 // @ts-check
+import { describeError } from "./errors.js";
 /**
  * STUB-10 (M-10 и M-11, RW-40): выпадающие панели пинов и веток в хедере чата.
  *
@@ -1760,7 +1761,7 @@ export function mountPinsThreadsDom(rootEl, controllerOrOpts = {}) {
         nameInput.setAttribute("aria-invalid", "true");
       }
       if (formError) {
-        formError.textContent = err instanceof Error ? err.message : String(err);
+        formError.textContent = err instanceof Error ? err.message : describeError(err);
         formError.removeAttribute("hidden");
       }
     }

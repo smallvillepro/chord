@@ -1,5 +1,6 @@
 // @ts-check
 import { make as makeNode, setAriaHidden } from "./dom.js";
+import { describeError } from "./errors.js";
 
 /**
  * Локальный адаптер: возвращает DOM-узел без узкой типизации тега, чтобы
@@ -432,7 +433,7 @@ export function createAuthGate(options = {}) {
           try { w.hcaptcha.execute(widgetId); } catch (_) { /* ignore */ }
         }
       } catch (err) {
-        statusLine.textContent = `Ошибка инициализации hCaptcha: ${err instanceof Error ? err.message : String(err)}`;
+        statusLine.textContent = `Ошибка инициализации hCaptcha: ${err instanceof Error ? err.message : describeError(err)}`;
       }
     };
 

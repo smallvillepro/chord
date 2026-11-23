@@ -14,7 +14,7 @@
  */
 import { QUICK_REACTIONS, baseReactions, extrasFor } from "./rows.js";
 import { DEFAULT_HOVER_QUICK_REACTIONS } from "./reactions-ui.js";
-import { UIError } from "./errors.js";
+import { UIError, describeError } from "./errors.js";
 
 /** @typedef {import("./rows.js").Reaction} Reaction */
 /** @typedef {number | string} ReactionKey */
@@ -258,7 +258,7 @@ export async function requestReaction(key, emoji, base, options = {}) {
     active = toggleReaction(key, emoji, base, { allowUnknown: true, burst });
   } catch (error) {
     const errFn = options.onError ?? reportReactionError;
-    errFn(error instanceof UIError ? error : new UIError("ACTION_FAILED", String(error), error));
+    errFn(error instanceof UIError ? error : new UIError("ACTION_FAILED", describeError(error), error));
     return;
   }
 

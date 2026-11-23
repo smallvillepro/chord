@@ -10,7 +10,7 @@
  * `aria-checked` синхронизируется на `click` и `change`.
  */
 import { byId } from "./dom.js";
-import { UIError } from "./errors.js";
+import { UIError, describeError } from "./errors.js";
 import { mountLiveDiscordSettings } from "./live-settings-enhancer.js";
 import { createVoiceDevicesSettingsController } from "./voice-devices-settings.js";
 
@@ -458,11 +458,7 @@ export function createSettingsConsole(options) {
     status.setAttribute("hidden", "");
   }
 
-  /** @param {unknown} error @returns {string} */
-  function describeError(error) {
-    if (isRecord(error) && typeof error.message === "string") return error.message;
-    return String(error);
-  }
+  /** Ошибка статуса: общий форматтер, объекты не превращаются в [object Object]. */
 
   /**
    * Запись настроек. Ошибка не откатывает UI: состояние уже применено, а

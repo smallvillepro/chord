@@ -36,6 +36,34 @@ export class UIError extends Error {
 }
 
 /**
+ * Человекочитаемое описание любого исключения.
+ *
+ * `String(object)` даёт "[object Object]", поэтому объекты разбираются по
+ * полям: сначала `message`, затем `kind` (Rust-ошибки приходят как
+ * `{kind, message, path}`), затем JSON, и только в конце — `toString`.
+ * @param {unknown} error
+ * @returns {string}
+ */
+export function describeError(error) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
+    const record = /** @type {Record<string, unknown>} */ (error);
+    const message = typeof record.message === "string" ? record.message : "";
+    const kind = typeof record.kind === "string" ? record.kind : "";
+    if (message) return kind ? `${kind}: ${message}` : message;
+    try {
+      const json = JSON.stringify(error);
+      if (json && json !== "{}") return json;
+    } catch {
+      // Циклическая структура: падать из-за форматирования ошибки нельзя.
+    }
+    return Object.prototype.toString.call(error);
+  }
+  return String(error);
+}
+
+/**
  * Приводит любое исключение к `UIError`, сохраняя исходную причину.
  * @param {string} code
  * @param {unknown} error
@@ -43,8 +71,7 @@ export class UIError extends Error {
  */
 export function asUIError(code, error) {
   if (error instanceof UIError) return error;
-  const message = error instanceof Error ? error.message : String(error);
-  return new UIError(code, message, error);
+  return new UIError(code, describeError(error), error);
 }
 
 /**

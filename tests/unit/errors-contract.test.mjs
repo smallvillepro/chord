@@ -26,4 +26,22 @@ describe('QA Contract — Feature: errors', () => {
     assert.equal(typeof mod, "object");
     assert.ok(mod !== null);
   });
+
+  it('4. Rust-style error objects never render as [object Object]', async () => {
+    const { asUIError, describeError } = await import('../../rust/gui-spike/ui/features/errors.js');
+
+    assert.equal(describeError(new Error('boom')), 'boom');
+    assert.equal(describeError('plain'), 'plain');
+    assert.equal(
+      describeError({ kind: 'Io', message: 'нет доступа', path: 'C:/x' }),
+      'Io: нет доступа',
+    );
+    assert.equal(describeError({ code: 42 }), '{"code":42}');
+    assert.equal(describeError(null), 'null');
+    assert.equal(describeError(undefined), 'undefined');
+
+    const wrapped = asUIError('ACTION_FAILED', { kind: 'Parse', message: 'bad json' });
+    assert.equal(wrapped.message, 'Parse: bad json');
+    assert.notEqual(wrapped.message, '[object Object]');
+  });
 });
